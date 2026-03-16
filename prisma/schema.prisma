@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String       @id @default(uuid())
+  displayName String       @map("display_name")
+  email       String       @unique
+  googleId    String?      @unique @map("google_id")
+  avatarUrl   String?      @map("avatar_url")
+  initials    String
+  color       String
+  createdAt   DateTime     @default(now()) @map("created_at")
+
+  oauthCodes  OAuthCode[]
+  oauthTokens OAuthToken[]
+
+  @@map("users")
+}
+
+model OAuthClient {
+  clientId         String       @id @map("client_id")
+  clientSecret     String?      @map("client_secret")
+  redirectUris     String[]     @map("redirect_uris")
+  grantTypes       String[]     @default(["authorization_code"]) @map("grant_types")
+  responseTypes    String[]     @default(["code"]) @map("response_types")
+  clientName       String?      @map("client_name")
+  clientUri        String?      @map("client_uri")
+  clientIdIssuedAt Int          @map("client_id_issued_at")
+
+  codes  OAuthCode[]
+  tokens OAuthToken[]
+
+  @@map("oauth_clients")
+}
+
+model OAuthCode {
+  code                String      @id
+  clientId            String      @map("client_id")
+  client              OAuthClient @relation(fields: [clientId], references: [clientId])
+  userId              String      @map("user_id")
+  user                User        @relation(fields: [userId], references: [id])
+  redirectUri         String      @map("redirect_uri")
+  codeChallenge       String      @map("code_challenge")
+  codeChallengeMethod String      @default("S256") @map("code_challenge_method")
+  scopes              String[]    @default([])
+  expiresAt           Int         @map("expires_at")
+  used                Boolean     @default(false)
+
+  @@map("oauth_codes")
+}
+
+model OAuthToken {
+  token     String      @id
+  tokenType String      @default("refresh") @map("token_type")
+  clientId  String      @map("client_id")
+  client    OAuthClient @relation(fields: [clientId], references: [clientId])
+  userId    String      @map("user_id")
+  user      User        @relation(fields: [userId], references: [id])
+  scopes    String[]    @default([])
+  expiresAt Int         @map("expires_at")
+
+  @@map("oauth_tokens")
+}
