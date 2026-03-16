@@ -4,8 +4,8 @@
   "description": "Tasket authorization server — OAuth 2.1 with Google SSO, RS256 JWT issuer",
   "private": true,
   "scripts": {
-    "build": "nest build",
-    "start": "node dist/main",
+    "build": "nest build && npx prisma generate",
+    "start": "npx prisma db push && node dist/main",
     "start:dev": "nest start --watch",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
